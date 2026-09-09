@@ -38,33 +38,57 @@
                 return;
             }
 
-            debugBox.innerText = "Debug (" + origem + "): Buscando link direto...";
+            debugBox.innerText = "Debug (" + origem + "): Buscando XML direto da Steam...";
 
+            // Consulta direta ao XML da comunidade Steam
+            var xmlUrl = "https://steamcommunity.com/profiles/" + steamid + "?xml=1";
+            
             var xhr = new XMLHttpRequest();
-            xhr.open("GET", "https://decapi.me/steam/avatar/" + steamid, true);
+            xhr.open("GET", xmlUrl, true);
 
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === 4) {
-                    if (xhr.status === 200) {
-                        var directUrl = xhr.responseText.trim();
-                        if (directUrl && directUrl.indexOf("http") === 0) {
-                            
-                            // A MÁGICA ACONTECE AQUI:
-                            // Troca o https:// por http:// para o navegador do GMod não bloquear a imagem
-                            directUrl = directUrl.replace("https://", "http://");
-                            
-                            document.getElementById("avatarJogador").src = directUrl;
-                            debugBox.innerText = "Debug (" + origem + "): Sucesso! Forçando HTTP...";
-                        } else {
-                            debugBox.innerText = "Debug (" + origem + "): Resposta invalida da API.";
-                        }
+                    if (xhr.status === 200 && xhr.responseText) {
+                        processarXML(xhr.responseText, origem);
                     } else {
-                        debugBox.innerText = "Debug (" + origem + "): Falha na API (Status " + xhr.status + ").";
+                        // Fallback via proxy para testes em navegadores comuns que bloqueiam CORS
+                        debugBox.innerText = "Debug (" + origem + "): Tentando via Proxy reserva...";
+                        var proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(xmlUrl);
+                        var xhrProxy = new XMLHttpRequest();
+                        xhrProxy.open("GET", proxyUrl, true);
+                        xhrProxy.onreadystatechange = function() {
+                            if (xhrProxy.readyState === 4 && xhrProxy.status === 200) {
+                                processarXML(xhrProxy.responseText, origem);
+                            } else if (xhrProxy.readyState === 4) {
+                                debugBox.innerText = "Debug (" + origem + "): Falha ao obter dados da Steam.";
+                            }
+                        };
+                        xhrProxy.send();
                     }
                 }
             };
 
             xhr.send();
+        }
+
+        function processarXML(responseText, origem) {
+            var debugBox = document.getElementById("debug-box");
+            
+            // Extrai a tag <avatarFull> do XML da Steam
+            var match = responseText.match(/<avatarFull><!\[CDATA\[(https?:\/\/[^\]]+)\]\]><\/avatarFull>/) || 
+                        responseText.match(/<avatarFull>(https?:\/\/[^<]+)<\/avatarFull>/);
+
+            if (match && match[1]) {
+                var directUrl = match[1].trim();
+                
+                // Converte HTTPS para HTTP para garantir compatibilidade com o GMod antigos sem SSL
+                directUrl = directUrl.replace("https://", "http://");
+                
+                document.getElementById("avatarJogador").src = directUrl;
+                debugBox.innerText = "Debug (" + origem + "): Sucesso! Foto carregada da Steam.";
+            } else {
+                debugBox.innerText = "Debug (" + origem + "): Perfil privado ou sem foto.";
+            }
         }
 
         // Leitura via URL (?steamid=7656...)
@@ -78,3 +102,5 @@
             buscarEExibirAvatar(steamid, "GameDetails");
         }
     </script>
+</body>
+</html>
