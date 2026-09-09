@@ -31,45 +31,32 @@
         var splashes = ["100% livre de bugs!*", "Supimpa demais!", "Cuidado com o Prop Push!", "Bem-vindo ao servidor!"];
         document.getElementById("splash").innerText = splashes[Math.floor(Math.random() * splashes.length)];
 
-        function buscarEExibirAvatar(steamid, origem) {
-            var debugBox = document.getElementById("debug-box");
-            if (!steamid || steamid === "%s") {
-                debugBox.innerText = "Debug (" + origem + "): ID invalido ou %s.";
-                return;
+function buscarEExibirAvatar(steamid, origem) {
+    var debugBox = document.getElementById("debug-box");
+
+    if (!steamid || steamid === "%s") {
+        debugBox.innerText = "Debug (" + origem + "): ID invalido ou %s.";
+        return;
+    }
+
+    debugBox.innerText = "Debug (" + origem + "): Buscando via proxy proprio...";
+
+    // Troque pela URL do SEU Worker (a que a Cloudflare te deu)
+    var proxyUrl = "steamprofileget.felipe-souza-2019-83.workers.dev/?steamid=" + steamid;
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", proxyUrl, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200 && xhr.responseText) {
+                processarXML(xhr.responseText, origem);
+            } else {
+                debugBox.innerText = "Debug (" + origem + "): Falha no proxy (status " + xhr.status + ").";
             }
-
-            debugBox.innerText = "Debug (" + origem + "): Buscando XML direto da Steam...";
-
-            // Consulta direta ao XML da comunidade Steam
-            var xmlUrl = "https://steamcommunity.com/profiles/" + steamid + "?xml=1";
-            
-            var xhr = new XMLHttpRequest();
-            xhr.open("GET", xmlUrl, true);
-
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200 && xhr.responseText) {
-                        processarXML(xhr.responseText, origem);
-                    } else {
-                        // Fallback via proxy para testes em navegadores comuns que bloqueiam CORS
-                        debugBox.innerText = "Debug (" + origem + "): Tentando via Proxy reserva...";
-                        var proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(xmlUrl);
-                        var xhrProxy = new XMLHttpRequest();
-                        xhrProxy.open("GET", proxyUrl, true);
-                        xhrProxy.onreadystatechange = function() {
-                            if (xhrProxy.readyState === 4 && xhrProxy.status === 200) {
-                                processarXML(xhrProxy.responseText, origem);
-                            } else if (xhrProxy.readyState === 4) {
-                                debugBox.innerText = "Debug (" + origem + "): Falha ao obter dados da Steam.";
-                            }
-                        };
-                        xhrProxy.send();
-                    }
-                }
-            };
-
-            xhr.send();
         }
+    };
+    xhr.send();
+}
 
         function processarXML(responseText, origem) {
             var debugBox = document.getElementById("debug-box");
