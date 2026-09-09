@@ -49,6 +49,7 @@
             white-space: nowrap;
             pointer-events: none;
             animation: splashBounce 0.4s infinite alternate ease-in-out;
+            z-index: 20;
         }
 
         @keyframes splashBounce {
@@ -56,33 +57,41 @@
             100% { transform: rotate(-15deg) scale(1.15); }
         }
 
-        /* GIF de carregamento */
-        .loading-gif {
+        /* --- CONTAINER DA TV --- */
+        /* Esta caixa segura o GIF e o Avatar juntos para não saírem de sincronia */
+        .tv-container {
+            position: relative;
             max-width: 90vw;
-            max-height: 40vh; /* Reduzido para dar espaço ao avatar */
+            max-height: 65vh;
+            display: inline-block; /* Mantém o tamanho do conteúdo interno */
+        }
+
+        .loading-gif {
             width: auto;
-            height: auto;
+            height: 100%;
+            max-height: 65vh;
             display: block;
-            object-fit: contain;
-            margin-bottom: 20px !important;
         }
 
-        /* Estilos do Avatar do Jogador */
-        .player-info {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-top: 20px !important;
-        }
-
+        /* --- ESTILO DO AVATAR NA TV --- */
         .avatar-img {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%; /* Deixa a imagem redonda */
-            border: 4px solid #111111;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            display: none; /* Escondido por padrão, aparece quando carrega */
+            position: absolute;
+            display: none; /* Aparece via JS */
+            
+            /* --- AJUSTE ESTES VALORES PARA ENCAIXAR NA TV --- */
+            top: 25%;       /* Move para cima/baixo */
+            left: 45%;      /* Move para esquerda/direita */
+            width: 8%;      /* Largura da imagem na TV */
+            height: 12%;    /* Altura da imagem na TV */
+            
+            /* Efeito para inclinar e girar a imagem igual a tela amarela */
+            transform: perspective(200px) rotateY(15deg) rotateX(-5deg) rotateZ(-2deg);
+            
+            /* Remove a borda redonda para parecer uma tela quadrada */
+            border-radius: 2px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8); /* Dá uma leve sombra interna de tela */
             object-fit: cover;
+            z-index: 10;
         }
     </style>
 </head>
@@ -93,16 +102,13 @@
         <span id="splash" class="splash-text">Carregando...</span>
     </div>
 
-    <!-- GIF de Carregamento Original -->
-    <img class="loading-gif" src="loading.gif" alt="Carregando...">
-
-    <!-- Espaço onde o Avatar do jogador vai aparecer -->
-    <div class="player-info">
+    <!-- Caixa que agrupa o GIF e o Avatar -->
+    <div class="tv-container">
+        <img class="loading-gif" src="loading.gif" alt="Carregando...">
         <img id="player-avatar" class="avatar-img" src="" alt="Avatar">
     </div>
 
     <script>
-        // --- 1. Lógica do Splash Text (Frases Aleatórias) ---
         const splashes = [
             "100% livre de bugs!*",
             "Supimpa demais!",
@@ -118,16 +124,12 @@
         const randomSplash = splashes[Math.floor(Math.random() * splashes.length)];
         document.getElementById("splash").innerText = randomSplash;
 
-        // --- 2. Lógica para buscar o Avatar usando o Proxy ---
-        
-        // Coloque aqui a URL do seu Worker (Proxy)
-        const PROXY_URL = "https://steamprofileget.felipe-souza-2019-83.workers.dev/?steamid="; 
+        // URL DO PROXY
+        const PROXY_URL = "COLOQUE_A_URL_DO_SEU_PROXY_AQUI"; 
 
-        // O Garry's Mod passa o steamid pela URL (ex: index.html?steamid=7656119...)
         const urlParams = new URLSearchParams(window.location.search);
         const steamId = urlParams.get('steamid');
 
-        // Se houver um steamid na URL, faz a requisição para o Proxy
         if (steamId) {
             fetch(`${PROXY_URL}?steamid=${steamId}`)
                 .then(response => {
@@ -137,11 +139,10 @@
                     return response.json();
                 })
                 .then(data => {
-                    // Se o proxy retornar o avatar com sucesso
                     if (data && data.avatarfull) {
                         const avatarElement = document.getElementById("player-avatar");
                         avatarElement.src = data.avatarfull;
-                        avatarElement.style.display = "block"; // Mostra a imagem
+                        avatarElement.style.display = "block"; 
                     }
                 })
                 .catch(error => {
@@ -149,6 +150,5 @@
                 });
         }
     </script>
-
 </body>
 </html>
