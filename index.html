@@ -12,14 +12,11 @@
         @keyframes splashBounce { 0% { transform: rotate(-15deg) scale(1); } 100% { transform: rotate(-15deg) scale(1.15); } }
         #avatarJogador { max-width: none !important; max-height: none !important; width: 128px !important; height: 128px !important; border-radius: 50% !important; border: 4px solid #111111 !important; box-shadow: 0px 4px 10px rgba(0,0,0,0.3) !important; margin-bottom: 20px !important; object-fit: cover; }
         #loading-gif { max-width: 90vw; max-height: 65vh; width: auto; height: auto; display: block; object-fit: contain; }
-        
-        /* Estilo da caixa de debug */
         #debug-box { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.8); color: #fff; padding: 10px; font-family: monospace; border-radius: 5px; z-index: 9999; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <!-- Caixa que vai mostrar o que está dando errado -->
     <div id="debug-box">Debug: Aguardando resposta do GMod...</div>
 
     <div class="header-container">
@@ -34,31 +31,47 @@
         var splashes = ["100% livre de bugs!*", "Supimpa demais!", "Cuidado com o Prop Push!", "Bem-vindo ao servidor!"];
         document.getElementById("splash").innerText = splashes[Math.floor(Math.random() * splashes.length)];
 
-        function definirAvatar(steamid, origem) {
+        function buscarEExibirAvatar(steamid, origem) {
             var debugBox = document.getElementById("debug-box");
-            
-            if (!steamid) {
-                debugBox.innerText = "Debug (" + origem + "): ID veio vazio.";
+            if (!steamid || steamid === "%s") {
+                debugBox.innerText = "Debug (" + origem + "): ID invalido ou %s.";
                 return;
             }
-            if (steamid === "%s") {
-                debugBox.innerText = "Debug (" + origem + "): Erro! O servidor não substituiu o %s.";
-                return;
-            }
-            
-            debugBox.innerText = "Debug (" + origem + "): Sucesso! ID -> " + steamid;
-            document.getElementById("avatarJogador").src = "https://unavatar.io/steam/" + steamid;
+
+            debugBox.innerText = "Debug (" + origem + "): Buscando link direto...";
+
+            // Requisição XHR compatível com o Awesomium para obter a URL direta sem redirecionamento 302
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "https://decapi.me/steam/avatar/" + steamid, true);
+
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        var directUrl = xhr.responseText.trim();
+                        if (directUrl && directUrl.indexOf("http") === 0) {
+                            document.getElementById("avatarJogador").src = directUrl;
+                            debugBox.innerText = "Debug (" + origem + "): Sucesso! Foto de perfil carregada.";
+                        } else {
+                            debugBox.innerText = "Debug (" + origem + "): Resposta invalida da API.";
+                        }
+                    } else {
+                        debugBox.innerText = "Debug (" + origem + "): Falha na API (Status " + xhr.status + ").";
+                    }
+                }
+            };
+
+            xhr.send();
         }
 
-        // Tenta capturar pela URL
+        // Leitura via URL (?steamid=7656...)
         var match = window.location.search.match(/[?&]steamid=([^&]+)/);
         if (match && match[1]) {
-            definirAvatar(match[1], "URL");
+            buscarEExibirAvatar(match[1], "URL");
         }
 
-        // Tenta capturar pela função nativa do jogo
+        // Leitura via função nativa do GMod
         function GameDetails(servername, serverurl, mapname, maxplayers, steamid, gamemode, volume, language) {
-            definirAvatar(steamid, "GameDetails");
+            buscarEExibirAvatar(steamid, "GameDetails");
         }
     </script>
 </body>
