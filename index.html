@@ -5,26 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tela de Carregamento</title>
     <style>
-        body {
+        * {
             margin: 0;
             padding: 0;
-            background-color: #FFFFFF; /* Cor do fundo */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
+            box-sizing: border-box;
         }
-        img {
-            max-width: 100%;
-            max-height: 100%;
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+        }
+        .loading-gif {
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover; /* Faz o GIF cobrir a tela inteira cortando sobras */
+            object-position: center;
         }
     </style>
 </head>
 <body>
 
-    <!-- Lembre-se de colocar o nome exato do seu arquivo GIF aqui -->
-    <img src="loading.gif" alt="Carregando...">
+    <img src="loading.gif" alt="Carregando..." class="loading-gif">
 
 </body>
 </html>
