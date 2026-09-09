@@ -93,45 +93,44 @@
     <img id="loading-gif" src="loading.gif" alt="Carregando...">
 
     <script>
-        var splashes = [
-            "100% livre de bugs!*",
-            "Supimpa demais!",
-            "Cuidado com o Prop Push!",
-            "Feito com HTML & CSS!",
-            "Não aperte Alt + F4!",
-            "Servidor rodando liso!",
-            "Invocando os addons...",
-            "Tudo sob controle!",
-            "Bem-vindo ao servidor!"
-        ];
+    var splashes = [
+        "100% livre de bugs!*",
+        "Supimpa demais!",
+        "Cuidado com o Prop Push!",
+        "Feito com HTML & CSS!",
+        "Não aperte Alt + F4!",
+        "Servidor rodando liso!",
+        "Invocando os addons...",
+        "Tudo sob controle!",
+        "Bem-vindo ao servidor!"
+    ];
 
-        var randomSplash = splashes[Math.floor(Math.random() * splashes.length)];
-        document.getElementById("splash").innerText = randomSplash;
+    var randomSplash = splashes[Math.floor(Math.random() * splashes.length)];
+    document.getElementById("splash").innerText = randomSplash;
 
-        // Função responsável por buscar a foto usando XMLHttpRequest (compatível com o GMod antigo)
-        function carregarAvatar(steamid) {
-            if (!steamid) return;
+    // 1. Lemos a URL da página e procuramos a variável steamid
+    var steamid = null;
+    var linkMatch = window.location.search.match(/[?&]steamid=([^&]+)/);
+    if (linkMatch) {
+        steamid = linkMatch[1];
+    }
 
-            var xhr = new XMLHttpRequest();
-            xhr.open("GET", "https://decapi.me/steam/avatar/" + steamid, true);
-            
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    var avatarUrl = xhr.responseText.trim();
-                    if (avatarUrl && avatarUrl.indexOf("http") === 0) {
-                        document.getElementById("avatarJogador").src = avatarUrl;
-                    }
+    // 2. Se o ID foi encontrado e substituído com sucesso, buscamos a foto
+    if (steamid && steamid !== "%s") {
+        var xhr = new XMLHttpRequest();
+        // Comunica com o DecAPI para driblar os bloqueios
+        xhr.open("GET", "https://decapi.me/steam/avatar/" + steamid, true);
+        
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                var avatarUrl = xhr.responseText.trim();
+                // Se retornou um link válido, troca a foto na tela
+                if (avatarUrl && avatarUrl.indexOf("http") === 0) {
+                    document.getElementById("avatarJogador").src = avatarUrl;
                 }
-            };
-            
-            xhr.send();
-        }
-
-        // Função nativa chamada automaticamente pelo Garry's Mod
-        function GameDetails(servername, serverurl, mapname, maxplayers, steamid, gamemode, volume, language) {
-            carregarAvatar(steamid);
-        }
-    </script>
-
-</body>
-</html>
+            }
+        };
+        
+        xhr.send();
+    }
+</script>
