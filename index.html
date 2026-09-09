@@ -58,7 +58,6 @@
             100% { transform: rotate(-15deg) scale(1.15); }
         }
 
-        /* Container ajustado para "abraçar" o GIF exatament e não bugar a posição */
         .stage-container {
             position: relative;
             display: inline-block;
@@ -66,30 +65,25 @@
         }
 
         .stage-container img.bg-gif {
-            height: 65vh; /* Define a altura, a largura se adapta automaticamente */
+            height: 65vh;
             width: auto;
             display: block;
         }
 
-        /* Foto da Steam exata no quadrado vermelho */
+        /* Enquadramento do Avatar na Tela da TV */
         .tv-avatar {
             position: absolute;
-            
-            /* Coordenadas atualizadas com base no quadrado vermelho */
             top: 10.5%;
             left: 29.5%;
             width: 7.5%;
             height: 11.5%;
-            
             object-fit: cover;
             border-radius: 2px;
-            opacity: 0.85; /* Efeito leve de opacidade para misturar na tela */
-            
-            /* Rotação positiva porque a TV está inclinada para baixo na direita */
+            opacity: 0.88;
             transform: rotate(8deg);
-            
-            box-shadow: inset 0 0 8px rgba(0,0,0,0.9); /* Sombra interna para parecer que está dentro do monitor */
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.9);
             z-index: 2;
+            transition: opacity 0.3s ease;
         }
     </style>
 </head>
@@ -100,10 +94,9 @@
         <span id="splash" class="splash-text">Carregando...</span>
     </div>
 
-    <!-- O Container agora abraça o GIF perfeitamente -->
     <div class="stage-container">
         <img src="loading.gif" alt="Cenário" class="bg-gif">
-        <!-- Ponto de interrogação padrão se falhar -->
+        <!-- Avatar padrão cinza enquanto carrega -->
         <img id="user-avatar" class="tv-avatar" src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Solid_gray.png/1024px-Solid_gray.png" alt="Avatar">
     </div>
 
@@ -122,21 +115,34 @@
         ];
         document.getElementById("splash").innerText = splashes[Math.floor(Math.random() * splashes.length)];
 
-        // 2. Busca Rápida e Confiável da Foto da Steam (DecAPI)
+        // 2. Sistema de Captura de Avatar estilo LSM
         const urlParams = new URLSearchParams(window.location.search);
         const steamid = urlParams.get('steamid');
 
         if (steamid) {
-            // DecAPI converte o SteamID64 direto na URL do .jpg sem problemas de CORS
+            // Método Primário: DecAPI (Rápida e direta)
             fetch(`https://decapi.me/steam/avatar/${steamid}`)
                 .then(res => res.text())
                 .then(avatarUrl => {
-                    // Verifica se o retorno é realmente um link http
                     if (avatarUrl && avatarUrl.startsWith("http")) {
                         document.getElementById("user-avatar").src = avatarUrl;
+                    } else {
+                        throw new Error("URL inválida recebida");
                     }
                 })
-                .catch(err => console.error("Erro na API da Steam:", err));
+                .catch(() => {
+                    // Método Secundário (Fallback): Steam XML via Proxy
+                    fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(`https://steamcommunity.com/profiles/${steamid}/?xml=1`)}`)
+                        .then(res => res.text())
+                        .then(str => new DOMParser().parseFromString(str, "text/xml"))
+                        .then(xml => {
+                            const fallbackUrl = xml.querySelector("avatarFull")?.textContent || xml.querySelector("avatarIcon")?.textContent;
+                            if (fallbackUrl) {
+                                document.getElementById("user-avatar").src = fallbackUrl;
+                            }
+                        })
+                        .catch(err => console.error("Erro ao carregar avatar:", err));
+                });
         }
     </script>
 
