@@ -15,7 +15,7 @@
         html, body {
             width: 100%;
             height: 100%;
-            background-color: #ffffff;
+            background-color: #ffffff; /* Fundo branco */
             overflow: hidden;
             display: flex;
             flex-direction: column;
@@ -24,11 +24,11 @@
             font-family: Tahoma, Geneva, Verdana, sans-serif;
         }
 
+        /* Container para alinhar o Splash Text em relação ao Título */
         .header-container {
             position: relative;
-            margin-bottom: 50px !important;
+            margin-bottom: 30px !important;
             text-align: center;
-            z-index: 10;
         }
 
         .server-title {
@@ -39,50 +39,54 @@
             text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
         }
 
+        /* Estilo Splash Text do Minecraft */
         .splash-text {
             position: absolute;
-            right: -20px;
-            bottom: -35px;
-            color: #FFFF55;
-            font-size: 24px;
+            right: -10px;
+            bottom: -40px;
+            color: #FFFF55; /* Amarelo vibrante clássico */
+            font-size: 26px;
             font-weight: bold;
+            /* Sombra escura e contorno para dar contraste no fundo branco */
             text-shadow: 2px 2px 0px #3f3f00, 2px 2px 4px rgba(0, 0, 0, 0.7); 
             white-space: nowrap;
             pointer-events: none;
+            
+            /* Animação de pulsação */
             animation: splashBounce 0.4s infinite alternate ease-in-out;
-            z-index: 20;
         }
 
+        /* Animação que faz o texto pulsar no ângulo de -15 graus */
         @keyframes splashBounce {
-            0% { transform: rotate(-15deg) scale(1); }
-            100% { transform: rotate(-15deg) scale(1.15); }
+            0% {
+                transform: rotate(-15deg) scale(1);
+            }
+            100% {
+                transform: rotate(-15deg) scale(1.15);
+            }
         }
 
-        .stage-container {
-            position: relative;
-            display: inline-block;
-            z-index: 1;
-        }
-
-        .stage-container img.bg-gif {
-            height: 65vh;
-            width: auto;
-            display: block;
-        }
-
-        .tv-avatar {
-            position: absolute;
-            top: 10.5%;
-            left: 29.5%;
-            width: 7.5%;
-            height: 11.5%;
+        /* Estilos do Avatar do jogador */
+        #avatarJogador {
+            max-width: none !important;
+            max-height: none !important;
+            width: 128px !important;
+            height: 128px !important;
+            border-radius: 50% !important;
+            border: 4px solid #111111 !important;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.3) !important;
+            margin-bottom: 20px !important;
             object-fit: cover;
-            border-radius: 2px;
-            opacity: 0.88;
-            transform: rotate(8deg);
-            box-shadow: inset 0 0 8px rgba(0,0,0,0.9);
-            z-index: 2;
-            transition: opacity 0.3s ease;
+        }
+
+        /* Aplica as dimensões apenas na imagem de carregamento para não bugar o avatar */
+        #loading-gif {
+            max-width: 90vw;
+            max-height: 65vh;
+            width: auto;
+            height: auto;
+            display: block;
+            object-fit: contain;
         }
     </style>
 </head>
@@ -93,13 +97,14 @@
         <span id="splash" class="splash-text">Carregando...</span>
     </div>
 
-    <div class="stage-container">
-        <img src="loading.gif" alt="Cenário" class="bg-gif">
-        <!-- O alt="" vazio e o onerror evitam o ícone quebrado se a internet do jogador falhar -->
-        <img id="user-avatar" class="tv-avatar" src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Solid_gray.png/1024px-Solid_gray.png" alt="" onerror="this.onerror=null; this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Solid_gray.png/1024px-Solid_gray.png';">
-    </div>
+    <!-- Área da foto de perfil (Inicia com uma imagem de interrogação padrão) -->
+    <img id="avatarJogador" src="https://i.imgur.com/2m4cT3y.png" alt="Avatar do Jogador">
+
+    <!-- Adicionei o ID 'loading-gif' aqui para diferenciar do avatar -->
+    <img id="loading-gif" src="loading.gif" alt="Carregando...">
 
     <script>
+        // Adicione ou edite as frases que você quer que apareçam aleatoriamente
         const splashes = [
             "100% livre de bugs!*",
             "Supimpa demais!",
@@ -111,37 +116,25 @@
             "Tudo sob controle!",
             "Bem-vindo ao servidor!"
         ];
-        document.getElementById("splash").innerText = splashes[Math.floor(Math.random() * splashes.length)];
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const steamid = urlParams.get('steamid');
+        // Sorteia uma frase da lista ao abrir a página
+        const randomSplash = splashes[Math.floor(Math.random() * splashes.length)];
+        document.getElementById("splash").innerText = randomSplash;
 
-        if (steamid) {
-            fetch(`https://decapi.me/steam/avatar/${steamid}`)
-                .then(res => res.text())
-                .then(avatarUrl => {
-                    // Limpa espaços invisíveis e força o uso de HTTPS seguro
-                    avatarUrl = avatarUrl.trim().replace(/^http:\/\//i, 'https://');
-                    
-                    if (avatarUrl.startsWith("https")) {
-                        document.getElementById("user-avatar").src = avatarUrl;
-                    } else {
-                        throw new Error("URL inválida recebida");
-                    }
-                })
-                .catch(() => {
-                    fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(`https://steamcommunity.com/profiles/${steamid}/?xml=1`)}`)
-                        .then(res => res.text())
-                        .then(str => new DOMParser().parseFromString(str, "text/xml"))
-                        .then(xml => {
-                            let fallbackUrl = xml.querySelector("avatarFull")?.textContent || xml.querySelector("avatarIcon")?.textContent;
-                            if (fallbackUrl) {
-                                fallbackUrl = fallbackUrl.trim().replace(/^http:\/\//i, 'https://');
-                                document.getElementById("user-avatar").src = fallbackUrl;
-                            }
-                        })
-                        .catch(err => console.error("Falha no carregamento secundário:", err));
-                });
+        // O GMod chama essa função automaticamente quando o jogador conecta no servidor
+        function GameDetails(servername, serverurl, mapname, maxplayers, steamid, gamemode, volume, language) {
+            if (steamid) {
+                // Como está no GitHub, usamos a API do DecAPI para pegar a foto sem bloqueio (CORS)
+                fetch(`https://decapi.me/steam/avatar/${steamid}`)
+                    .then(response => response.text())
+                    .then(avatarUrl => {
+                        // Confere se retornou um link válido da imagem
+                        if (avatarUrl && avatarUrl.startsWith("http")) {
+                            document.getElementById("avatarJogador").src = avatarUrl;
+                        }
+                    })
+                    .catch(err => console.error("Erro ao buscar avatar na Steam:", err));
+            }
         }
     </script>
 
