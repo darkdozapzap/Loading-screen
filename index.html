@@ -24,12 +24,11 @@
             font-family: Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        /* Container do Título + Splash Text */
         .header-container {
             position: relative;
-            margin-bottom: 50px !important; /* Espaço ampliado para não colidir com o GIF */
+            margin-bottom: 50px !important;
             text-align: center;
-            z-index: 10; /* Mantém o cabeçalho acima do GIF */
+            z-index: 10;
         }
 
         .server-title {
@@ -40,7 +39,6 @@
             text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
         }
 
-        /* Splash Text do Minecraft ajustado */
         .splash-text {
             position: absolute;
             right: -20px;
@@ -52,7 +50,7 @@
             white-space: nowrap;
             pointer-events: none;
             animation: splashBounce 0.4s infinite alternate ease-in-out;
-            z-index: 20; /* Força o Splash Text a ficar NA FRENTE de qualquer elemento */
+            z-index: 20;
         }
 
         @keyframes splashBounce {
@@ -60,38 +58,37 @@
             100% { transform: rotate(-15deg) scale(1.15); }
         }
 
-        /* Container do GIF e da TV */
+        /* Container ajustado para "abraçar" o GIF exatament e não bugar a posição */
         .stage-container {
             position: relative;
             display: inline-block;
-            max-width: 90vw;
-            max-height: 65vh;
             z-index: 1;
         }
 
         .stage-container img.bg-gif {
-            width: 100%;
-            height: auto;
-            max-height: 65vh;
+            height: 65vh; /* Define a altura, a largura se adapta automaticamente */
+            width: auto;
             display: block;
-            object-fit: contain;
         }
 
-        /* Foto da Steam posicionada sobre a TV */
+        /* Foto da Steam exata no quadrado vermelho */
         .tv-avatar {
             position: absolute;
             
-            /* Posição ajustada para a tela da TV */
-            top: 15%;
-            left: 36.5%;
-            width: 6.8%;
-            height: 9.8%;
+            /* Coordenadas atualizadas com base no quadrado vermelho */
+            top: 10.5%;
+            left: 29.5%;
+            width: 7.5%;
+            height: 11.5%;
             
             object-fit: cover;
             border-radius: 2px;
-            opacity: 0.85;
-            transform: rotate(-11deg) skewY(4deg);
-            box-shadow: inset 0 0 5px rgba(0,0,0,0.8);
+            opacity: 0.85; /* Efeito leve de opacidade para misturar na tela */
+            
+            /* Rotação positiva porque a TV está inclinada para baixo na direita */
+            transform: rotate(8deg);
+            
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.9); /* Sombra interna para parecer que está dentro do monitor */
             z-index: 2;
         }
     </style>
@@ -103,9 +100,11 @@
         <span id="splash" class="splash-text">Carregando...</span>
     </div>
 
+    <!-- O Container agora abraça o GIF perfeitamente -->
     <div class="stage-container">
-        <img src="loading.gif" alt="Carregando..." class="bg-gif">
-        <img id="user-avatar" class="tv-avatar" src="https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg" alt="Steam Avatar">
+        <img src="loading.gif" alt="Cenário" class="bg-gif">
+        <!-- Ponto de interrogação padrão se falhar -->
+        <img id="user-avatar" class="tv-avatar" src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Solid_gray.png/1024px-Solid_gray.png" alt="Avatar">
     </div>
 
     <script>
@@ -123,34 +122,21 @@
         ];
         document.getElementById("splash").innerText = splashes[Math.floor(Math.random() * splashes.length)];
 
-        // 2. Busca Robusta da Foto da Steam
+        // 2. Busca Rápida e Confiável da Foto da Steam (DecAPI)
         const urlParams = new URLSearchParams(window.location.search);
         const steamid = urlParams.get('steamid');
 
         if (steamid) {
-            // Tenta o Proxy 1 (AllOrigins)
-            fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(`https://steamcommunity.com/profiles/${steamid}/?xml=1`)}`)
-                .then(res => {
-                    if (!res.ok) throw new Error();
-                    return res.text();
-                })
-                .then(str => new DOMParser().parseFromString(str, "text/xml"))
-                .then(data => {
-                    const avatarUrl = data.querySelector("avatarFull")?.textContent || data.querySelector("avatarIcon")?.textContent;
+            // DecAPI converte o SteamID64 direto na URL do .jpg sem problemas de CORS
+            fetch(`https://decapi.me/steam/avatar/${steamid}`)
+                .then(res => res.text())
+                .then(avatarUrl => {
+                    // Verifica se o retorno é realmente um link http
                     if (avatarUrl && avatarUrl.startsWith("http")) {
                         document.getElementById("user-avatar").src = avatarUrl;
                     }
                 })
-                .catch(() => {
-                    // Se o Proxy 1 falhar, tenta o Proxy 2 (CorsProxy)
-                    fetch(`https://corsproxy.io/?https://steamcommunity.com/profiles/${steamid}/?xml=1`)
-                        .then(res => res.text())
-                        .then(str => new DOMParser().parseFromString(str, "text/xml"))
-                        .then(data => {
-                            const avatarUrl = data.querySelector("avatarFull")?.textContent;
-                            if (avatarUrl) document.getElementById("user-avatar").src = avatarUrl;
-                        });
-                });
+                .catch(err => console.error("Erro na API da Steam:", err));
         }
     </script>
 
