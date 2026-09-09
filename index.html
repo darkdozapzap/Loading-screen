@@ -40,7 +40,6 @@
 
             debugBox.innerText = "Debug (" + origem + "): Buscando link direto...";
 
-            // Requisição XHR compatível com o Awesomium para obter a URL direta sem redirecionamento 302
             var xhr = new XMLHttpRequest();
             xhr.open("GET", "https://decapi.me/steam/avatar/" + steamid, true);
 
@@ -49,8 +48,13 @@
                     if (xhr.status === 200) {
                         var directUrl = xhr.responseText.trim();
                         if (directUrl && directUrl.indexOf("http") === 0) {
+                            
+                            // A MÁGICA ACONTECE AQUI:
+                            // Troca o https:// por http:// para o navegador do GMod não bloquear a imagem
+                            directUrl = directUrl.replace("https://", "http://");
+                            
                             document.getElementById("avatarJogador").src = directUrl;
-                            debugBox.innerText = "Debug (" + origem + "): Sucesso! Foto de perfil carregada.";
+                            debugBox.innerText = "Debug (" + origem + "): Sucesso! Forçando HTTP...";
                         } else {
                             debugBox.innerText = "Debug (" + origem + "): Resposta invalida da API.";
                         }
@@ -74,5 +78,3 @@
             buscarEExibirAvatar(steamid, "GameDetails");
         }
     </script>
-</body>
-</html>
