@@ -89,48 +89,46 @@
         <span id="splash" class="splash-text">Carregando...</span>
     </div>
 
+    <!-- Imagem de perfil do jogador -->
     <img id="avatarJogador" src="https://i.imgur.com/2m4cT3y.png" alt="Avatar do Jogador">
+
     <img id="loading-gif" src="loading.gif" alt="Carregando...">
 
     <script>
-    var splashes = [
-        "100% livre de bugs!*",
-        "Supimpa demais!",
-        "Cuidado com o Prop Push!",
-        "Feito com HTML & CSS!",
-        "Não aperte Alt + F4!",
-        "Servidor rodando liso!",
-        "Invocando os addons...",
-        "Tudo sob controle!",
-        "Bem-vindo ao servidor!"
-    ];
+        var splashes = [
+            "100% livre de bugs!*",
+            "Supimpa demais!",
+            "Cuidado com o Prop Push!",
+            "Feito com HTML & CSS!",
+            "Não aperte Alt + F4!",
+            "Servidor rodando liso!",
+            "Invocando os addons...",
+            "Tudo sob controle!",
+            "Bem-vindo ao servidor!"
+        ];
 
-    var randomSplash = splashes[Math.floor(Math.random() * splashes.length)];
-    document.getElementById("splash").innerText = randomSplash;
+        var randomSplash = splashes[Math.floor(Math.random() * splashes.length)];
+        document.getElementById("splash").innerText = randomSplash;
 
-    // 1. Lemos a URL da página e procuramos a variável steamid
-    var steamid = null;
-    var linkMatch = window.location.search.match(/[?&]steamid=([^&]+)/);
-    if (linkMatch) {
-        steamid = linkMatch[1];
-    }
-
-    // 2. Se o ID foi encontrado e substituído com sucesso, buscamos a foto
-    if (steamid && steamid !== "%s") {
-        var xhr = new XMLHttpRequest();
-        // Comunica com o DecAPI para driblar os bloqueios
-        xhr.open("GET", "https://decapi.me/steam/avatar/" + steamid, true);
-        
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-                var avatarUrl = xhr.responseText.trim();
-                // Se retornou um link válido, troca a foto na tela
-                if (avatarUrl && avatarUrl.indexOf("http") === 0) {
-                    document.getElementById("avatarJogador").src = avatarUrl;
-                }
+        // Atualiza a imagem diretamente sem precisar de requisições externas de texto
+        function definirAvatar(steamid) {
+            if (steamid && steamid !== "%s" && steamid.length > 5) {
+                // unavatar.io redireciona diretamente para a foto do perfil na Steam
+                document.getElementById("avatarJogador").src = "https://unavatar.io/steam/" + steamid;
             }
-        };
-        
-        xhr.send();
-    }
-</script>
+        }
+
+        // 1. Tenta capturar o ID se ele for passado na URL (?steamid=765611...)
+        var match = window.location.search.match(/[?&]steamid=([^&]+)/);
+        if (match && match[1]) {
+            definirAvatar(match[1]);
+        }
+
+        // 2. Tenta capturar se o Garry's Mod chamar a função nativa GameDetails
+        function GameDetails(servername, serverurl, mapname, maxplayers, steamid, gamemode, volume, language) {
+            definirAvatar(steamid);
+        }
+    </script>
+
+</body>
+</html>
