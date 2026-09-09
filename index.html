@@ -58,12 +58,11 @@
         }
 
         /* --- CONTAINER DA TV --- */
-        /* Esta caixa segura o GIF e o Avatar juntos para não saírem de sincronia */
         .tv-container {
             position: relative;
             max-width: 90vw;
             max-height: 65vh;
-            display: inline-block; /* Mantém o tamanho do conteúdo interno */
+            display: inline-block;
         }
 
         .loading-gif {
@@ -76,20 +75,19 @@
         /* --- ESTILO DO AVATAR NA TV --- */
         .avatar-img {
             position: absolute;
-            display: none; /* Aparece via JS */
+            display: none; /* Aparece via JS quando carregar */
             
-            /* --- AJUSTE ESTES VALORES PARA ENCAIXAR NA TV --- */
-            top: 25%;       /* Move para cima/baixo */
-            left: 45%;      /* Move para esquerda/direita */
-            width: 8%;      /* Largura da imagem na TV */
-            height: 12%;    /* Altura da imagem na TV */
+            /* Ajuste estes valores para posicionar dentro do espaço amarelo */
+            top: 25%;       
+            left: 45%;      
+            width: 8%;      
+            height: 12%;    
             
-            /* Efeito para inclinar e girar a imagem igual a tela amarela */
+            /* Inclina e gira para acompanhar o ângulo da tela do GIF */
             transform: perspective(200px) rotateY(15deg) rotateX(-5deg) rotateZ(-2deg);
             
-            /* Remove a borda redonda para parecer uma tela quadrada */
             border-radius: 2px;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.8); /* Dá uma leve sombra interna de tela */
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
             object-fit: cover;
             z-index: 10;
         }
@@ -102,7 +100,7 @@
         <span id="splash" class="splash-text">Carregando...</span>
     </div>
 
-    <!-- Caixa que agrupa o GIF e o Avatar -->
+    <!-- Caixa que segura o GIF e a tela da TV juntos -->
     <div class="tv-container">
         <img class="loading-gif" src="loading.gif" alt="Carregando...">
         <img id="player-avatar" class="avatar-img" src="" alt="Avatar">
@@ -124,7 +122,7 @@
         const randomSplash = splashes[Math.floor(Math.random() * splashes.length)];
         document.getElementById("splash").innerText = randomSplash;
 
-        // URL DO PROXY
+        // --- INSIRA AQUI A URL DO SEU CLOUDFLARE WORKER ---
         const PROXY_URL = "https://steamprofileget.felipe-souza-2019-83.workers.dev/?steamid="; 
 
         const urlParams = new URLSearchParams(window.location.search);
