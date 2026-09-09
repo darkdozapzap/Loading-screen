@@ -70,7 +70,6 @@
             display: block;
         }
 
-        /* Enquadramento do Avatar na Tela da TV */
         .tv-avatar {
             position: absolute;
             top: 10.5%;
@@ -96,12 +95,11 @@
 
     <div class="stage-container">
         <img src="loading.gif" alt="Cenário" class="bg-gif">
-        <!-- Avatar padrão cinza enquanto carrega -->
-        <img id="user-avatar" class="tv-avatar" src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Solid_gray.png/1024px-Solid_gray.png" alt="Avatar">
+        <!-- O alt="" vazio e o onerror evitam o ícone quebrado se a internet do jogador falhar -->
+        <img id="user-avatar" class="tv-avatar" src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Solid_gray.png/1024px-Solid_gray.png" alt="" onerror="this.onerror=null; this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Solid_gray.png/1024px-Solid_gray.png';">
     </div>
 
     <script>
-        // 1. Splash Text Aleatório
         const splashes = [
             "100% livre de bugs!*",
             "Supimpa demais!",
@@ -115,33 +113,34 @@
         ];
         document.getElementById("splash").innerText = splashes[Math.floor(Math.random() * splashes.length)];
 
-        // 2. Sistema de Captura de Avatar estilo LSM
         const urlParams = new URLSearchParams(window.location.search);
         const steamid = urlParams.get('steamid');
 
         if (steamid) {
-            // Método Primário: DecAPI (Rápida e direta)
             fetch(`https://decapi.me/steam/avatar/${steamid}`)
                 .then(res => res.text())
                 .then(avatarUrl => {
-                    if (avatarUrl && avatarUrl.startsWith("http")) {
+                    // Limpa espaços invisíveis e força o uso de HTTPS seguro
+                    avatarUrl = avatarUrl.trim().replace(/^http:\/\//i, 'https://');
+                    
+                    if (avatarUrl.startsWith("https")) {
                         document.getElementById("user-avatar").src = avatarUrl;
                     } else {
                         throw new Error("URL inválida recebida");
                     }
                 })
                 .catch(() => {
-                    // Método Secundário (Fallback): Steam XML via Proxy
                     fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(`https://steamcommunity.com/profiles/${steamid}/?xml=1`)}`)
                         .then(res => res.text())
                         .then(str => new DOMParser().parseFromString(str, "text/xml"))
                         .then(xml => {
-                            const fallbackUrl = xml.querySelector("avatarFull")?.textContent || xml.querySelector("avatarIcon")?.textContent;
+                            let fallbackUrl = xml.querySelector("avatarFull")?.textContent || xml.querySelector("avatarIcon")?.textContent;
                             if (fallbackUrl) {
+                                fallbackUrl = fallbackUrl.trim().replace(/^http:\/\//i, 'https://');
                                 document.getElementById("user-avatar").src = fallbackUrl;
                             }
                         })
-                        .catch(err => console.error("Erro ao carregar avatar:", err));
+                        .catch(err => console.error("Falha no carregamento secundário:", err));
                 });
         }
     </script>
