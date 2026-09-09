@@ -15,7 +15,7 @@
         html, body {
             width: 100%;
             height: 100%;
-            background-color: #ffffff; /* Fundo branco */
+            background-color: #ffffff;
             overflow: hidden;
             display: flex;
             flex-direction: column;
@@ -24,7 +24,6 @@
             font-family: Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        /* Container para alinhar o Splash Text em relação ao Título */
         .header-container {
             position: relative;
             margin-bottom: 30px !important;
@@ -39,24 +38,19 @@
             text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
         }
 
-        /* Estilo Splash Text do Minecraft */
         .splash-text {
             position: absolute;
             right: -10px;
             bottom: -40px;
-            color: #FFFF55; /* Amarelo vibrante clássico */
+            color: #FFFF55;
             font-size: 26px;
             font-weight: bold;
-            /* Sombra escura e contorno para dar contraste no fundo branco */
             text-shadow: 2px 2px 0px #3f3f00, 2px 2px 4px rgba(0, 0, 0, 0.7); 
             white-space: nowrap;
             pointer-events: none;
-            
-            /* Animação de pulsação */
             animation: splashBounce 0.4s infinite alternate ease-in-out;
         }
 
-        /* Animação que faz o texto pulsar no ângulo de -15 graus */
         @keyframes splashBounce {
             0% {
                 transform: rotate(-15deg) scale(1);
@@ -66,7 +60,6 @@
             }
         }
 
-        /* Estilos do Avatar do jogador */
         #avatarJogador {
             max-width: none !important;
             max-height: none !important;
@@ -79,7 +72,6 @@
             object-fit: cover;
         }
 
-        /* Aplica as dimensões apenas na imagem de carregamento para não bugar o avatar */
         #loading-gif {
             max-width: 90vw;
             max-height: 65vh;
@@ -97,15 +89,11 @@
         <span id="splash" class="splash-text">Carregando...</span>
     </div>
 
-    <!-- Área da foto de perfil (Inicia com uma imagem de interrogação padrão) -->
     <img id="avatarJogador" src="https://i.imgur.com/2m4cT3y.png" alt="Avatar do Jogador">
-
-    <!-- Adicionei o ID 'loading-gif' aqui para diferenciar do avatar -->
     <img id="loading-gif" src="loading.gif" alt="Carregando...">
 
     <script>
-        // Adicione ou edite as frases que você quer que apareçam aleatoriamente
-        const splashes = [
+        var splashes = [
             "100% livre de bugs!*",
             "Supimpa demais!",
             "Cuidado com o Prop Push!",
@@ -117,24 +105,31 @@
             "Bem-vindo ao servidor!"
         ];
 
-        // Sorteia uma frase da lista ao abrir a página
-        const randomSplash = splashes[Math.floor(Math.random() * splashes.length)];
+        var randomSplash = splashes[Math.floor(Math.random() * splashes.length)];
         document.getElementById("splash").innerText = randomSplash;
 
-        // O GMod chama essa função automaticamente quando o jogador conecta no servidor
+        // Função responsável por buscar a foto usando XMLHttpRequest (compatível com o GMod antigo)
+        function carregarAvatar(steamid) {
+            if (!steamid) return;
+
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "https://decapi.me/steam/avatar/" + steamid, true);
+            
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var avatarUrl = xhr.responseText.trim();
+                    if (avatarUrl && avatarUrl.indexOf("http") === 0) {
+                        document.getElementById("avatarJogador").src = avatarUrl;
+                    }
+                }
+            };
+            
+            xhr.send();
+        }
+
+        // Função nativa chamada automaticamente pelo Garry's Mod
         function GameDetails(servername, serverurl, mapname, maxplayers, steamid, gamemode, volume, language) {
-            if (steamid) {
-                // Como está no GitHub, usamos a API do DecAPI para pegar a foto sem bloqueio (CORS)
-                fetch(`https://decapi.me/steam/avatar/${steamid}`)
-                    .then(response => response.text())
-                    .then(avatarUrl => {
-                        // Confere se retornou um link válido da imagem
-                        if (avatarUrl && avatarUrl.startsWith("http")) {
-                            document.getElementById("avatarJogador").src = avatarUrl;
-                        }
-                    })
-                    .catch(err => console.error("Erro ao buscar avatar na Steam:", err));
-            }
+            carregarAvatar(steamid);
         }
     </script>
 
