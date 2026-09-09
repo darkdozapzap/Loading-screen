@@ -83,13 +83,17 @@
             width: 8%;      
             height: 15%;    
             
-            /* Inclina e gira para acompanhar o ângulo da tela do GIF */
-            transform: perspective(200px) rotateY(18deg) rotateX(-7deg) rotateZ(11deg);
+/* TRUQUE GMOD: Usamos Skew (inclinação 2D) para simular o 3D (perspective) sem bugar o jogo */
+            transform: rotate(11deg) skewY(18deg) skewX(-7deg);
             
             border-radius: 2px;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
             object-fit: cover;
             z-index: 10;
+            
+            /* TRUQUE DA TELA: Como inset shadow não pega em <img>, 
+               usamos drop-shadow externo pequeno e escurecemos a imagem levemente */
+            box-shadow: 0 0 5px rgba(0,0,0,0.8);
+            filter: brightness(0.85) contrast(1.1);
         }
     </style>
 </head>
